@@ -1,5 +1,9 @@
 // Family Dinner Picker - Frontend JavaScript
 
+// Authentication state
+let isAuthenticated = false;
+let authPassword = '';
+
 // Static Data
 const FAMILY_MEMBERS = [
     'Simon', 'Alison', 'Tom', 'Jane', 'Riona', 'Matthew', 'Ali', 
@@ -36,6 +40,13 @@ let currentSelections = {};
 let pollingInterval;
 
 // DOM Elements
+const loginScreen = document.getElementById('login-screen');
+const mainApp = document.getElementById('main-app');
+const passwordInput = document.getElementById('password-input');
+const loginBtn = document.getElementById('login-btn');
+const loginError = document.getElementById('login-error');
+const logoutBtn = document.getElementById('logout-btn');
+
 const personSelect = document.getElementById('person-select');
 const menuSelection = document.getElementById('menu-selection');
 const selectionContext = document.getElementById('selection-context');
@@ -47,9 +58,8 @@ const clearAllBtn = document.getElementById('clear-all-btn');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
-    setupEventListeners();
-    startPolling();
+    setupAuthEventListeners();
+    checkAuthStatus();
 });
 
 function initializeApp() {
@@ -77,6 +87,100 @@ function populateSelect(selectElement, options) {
         optionElement.textContent = option;
         selectElement.appendChild(optionElement);
     });
+}
+
+function setupAuthEventListeners() {
+    // Login form
+    loginBtn.addEventListener('click', handleLogin);
+    passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleLogin();
+        }
+    });
+    
+    // Logout
+    logoutBtn.addEventListener('click', handleLogout);
+}
+
+function checkAuthStatus() {
+    // Check if user is already authenticated (stored in sessionStorage)
+    const storedPassword = sessionStorage.getItem('dinnerPickerAuth');
+    if (storedPassword) {
+        authPassword = storedPassword;
+        isAuthenticated = true;
+        showMainApp();
+    } else {
+        showLoginScreen();
+    }
+}
+
+function showLoginScreen() {
+    loginScreen.style.display = 'flex';
+    mainApp.style.display = 'none';
+    passwordInput.focus();
+}
+
+function showMainApp() {
+    loginScreen.style.display = 'none';
+    mainApp.style.display = 'block';
+    initializeApp();
+    setupEventListeners();
+    startPolling();
+}
+
+async function handleLogin() {
+    const password = passwordInput.value.trim();
+    
+    if (!password) {
+        showLoginError('Please enter a password');
+        return;
+    }
+    
+    try {
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Logging in...';
+        
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            authPassword = password;
+            isAuthenticated = true;
+            sessionStorage.setItem('dinnerPickerAuth', password);
+            showMainApp();
+        } else {
+            showLoginError('Invalid password');
+        }
+    } catch (error) {
+        showLoginError('Login failed. Please try again.');
+        console.error('Login error:', error);
+    } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Login';
+    }
+}
+
+function showLoginError(message) {
+    loginError.textContent = message;
+    loginError.style.display = 'block';
+    setTimeout(() => {
+        loginError.style.display = 'none';
+    }, 3000);
+}
+
+function handleLogout() {
+    isAuthenticated = false;
+    authPassword = '';
+    sessionStorage.removeItem('dinnerPickerAuth');
+    showLoginScreen();
+    passwordInput.value = '';
 }
 
 function setupEventListeners() {
@@ -162,7 +266,8 @@ async function saveSelection() {
         const response = await fetch('/api/select', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'password': authPassword
             },
             body: JSON.stringify({ person, starter, main })
         });
@@ -224,7 +329,8 @@ async function clearAllSelections() {
         const response = await fetch('/api/reset', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'password': authPassword
             }
         });
         
@@ -265,7 +371,11 @@ function showSummarySuccessMessage(message) {
 
 async function fetchCurrentSelections() {
     try {
-        const response = await fetch('/api/selections');
+        const response = await fetch('/api/selections', {
+            headers: {
+                'password': authPassword
+            }
+        });
         if (response.ok) {
             currentSelections = await response.json();
         }
@@ -344,7 +454,11 @@ function startPolling() {
 
 async function refreshHistory() {
     try {
-        const response = await fetch('/api/history');
+        const response = await fetch('/api/history', {
+            headers: {
+                'password': authPassword
+            }
+        });
         if (response.ok) {
             const historyData = await response.json();
             renderHistory(historyData);
