@@ -82,10 +82,7 @@ app.post('/api/reset', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/api/history', requireAuth, (req, res) => {
-  // Get all historical selections (all dates)
-  res.json(selectionsManager.getAllData());
-});
+
 
 // Serve main app
 app.get('/', (req, res) => {
