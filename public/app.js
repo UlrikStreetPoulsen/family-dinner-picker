@@ -146,8 +146,8 @@ async function saveSelection() {
         return;
     }
     
-    if (!starter || !main) {
-        alert('Please select both a starter and main course');
+    if (!starter && !main) {
+        alert('Please select at least a starter OR a main course');
         return;
     }
     
@@ -164,8 +164,11 @@ async function saveSelection() {
         });
         
         if (response.ok) {
-            // Show success
-            showSuccessMessage(`Saved selections for ${person}!`);
+            // Show success  
+            const parts = [];
+            if (starter) parts.push('starter');
+            if (main) parts.push('main');
+            showSuccessMessage(`Saved ${parts.join(' and ')} for ${person}!`);
             
             // Reset form
             personSelect.value = '';
@@ -181,7 +184,7 @@ async function saveSelection() {
         console.error('Save error:', error);
     } finally {
         saveButton.disabled = false;
-        saveButton.textContent = 'Save Selections';
+        saveButton.textContent = 'Save Selection';
     }
 }
 

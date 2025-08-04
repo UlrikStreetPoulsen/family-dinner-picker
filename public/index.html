@@ -34,7 +34,7 @@
                     <h3 id="selection-context"></h3>
                     
                     <div class="form-group">
-                        <label for="starter-select">Starter</label>
+                        <label for="starter-select">Starter <span style="color: #666; font-weight: normal;">(optional)</span></label>
                         <select id="starter-select">
                             <option value="">- Select Starter -</option>
                             <!-- Starters will be populated by JavaScript -->
@@ -42,14 +42,18 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="main-select">Main Course</label>
+                        <label for="main-select">Main Course <span style="color: #666; font-weight: normal;">(optional)</span></label>
                         <select id="main-select">
                             <option value="">- Select Main -</option>
                             <!-- Mains will be populated by JavaScript -->
                         </select>
                     </div>
 
-                    <button id="save-selection" class="save-btn">Save Selections</button>
+                    <p style="color: #666; font-size: 0.9rem; text-align: center; margin: 1rem 0;">
+                        Select at least one course (starter or main)
+                    </p>
+
+                    <button id="save-selection" class="save-btn">Save Selection</button>
                 </div>
             </div>
         </div>
