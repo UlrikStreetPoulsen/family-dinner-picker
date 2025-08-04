@@ -146,7 +146,11 @@ async function saveSelection() {
         return;
     }
     
-    if (!starter && !main) {
+    // Handle empty strings as no selection
+    const hasStarter = starter && starter.trim() !== '';
+    const hasMain = main && main.trim() !== '';
+    
+    if (!hasStarter && !hasMain) {
         alert('Please select at least a starter OR a main course');
         return;
     }
@@ -166,8 +170,8 @@ async function saveSelection() {
         if (response.ok) {
             // Show success  
             const parts = [];
-            if (starter) parts.push('starter');
-            if (main) parts.push('main');
+            if (hasStarter) parts.push('starter');
+            if (hasMain) parts.push('main');
             showSuccessMessage(`Saved ${parts.join(' and ')} for ${person}!`);
             
             // Reset form
@@ -177,10 +181,11 @@ async function saveSelection() {
             // Refresh data
             await fetchCurrentSelections();
         } else {
-            throw new Error('Failed to save selection');
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            throw new Error(errorData.error || 'Failed to save selection');
         }
     } catch (error) {
-        alert('Error saving selection. Please try again.');
+        alert(`Error saving selection: ${error.message}`);
         console.error('Save error:', error);
     } finally {
         saveButton.disabled = false;

@@ -19,15 +19,26 @@ app.post('/api/select', (req, res) => {
   // Submit family member's choices
   const { person, starter, main } = req.body;
   
+  console.log('Received selection:', { person, starter, main });
+  
   if (!person) {
     return res.status(400).json({ error: 'Missing required field: person' });
   }
   
-  if (!starter && !main) {
+  // Handle empty strings as no selection
+  const hasStarter = starter && starter.trim() !== '';
+  const hasMain = main && main.trim() !== '';
+  
+  if (!hasStarter && !hasMain) {
     return res.status(400).json({ error: 'Must select at least a starter or main course' });
   }
   
-  selectionsManager.saveSelection(person, starter, main);
+  // Pass cleaned values (empty string becomes null)
+  selectionsManager.saveSelection(
+    person, 
+    hasStarter ? starter : null, 
+    hasMain ? main : null
+  );
   res.json({ success: true });
 });
 
