@@ -16,6 +16,7 @@
         <nav class="tabs">
             <button class="tab active" data-tab="select">Select Dinner</button>
             <button class="tab" data-tab="summary">Summary</button>
+            <button class="tab" data-tab="history">History</button>
         </nav>
 
         <!-- Selection Tab -->
@@ -64,6 +65,16 @@
                 
                 <div class="clear-section">
                     <button id="clear-all-btn" class="clear-btn">🗑️ Clear All Selections</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history-tab" class="tab-content">
+            <div class="history-content">
+                <h3>Previous Days</h3>
+                <div id="history-list">
+                    <p style="text-align: center; color: #666;">Loading history...</p>
                 </div>
             </div>
         </div>

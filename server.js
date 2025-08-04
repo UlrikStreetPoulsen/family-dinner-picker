@@ -38,6 +38,11 @@ app.post('/api/reset', (req, res) => {
   res.json({ success: true });
 });
 
+app.get('/api/history', (req, res) => {
+  // Get all historical selections (all dates)
+  res.json(selectionsManager.getAllData());
+});
+
 // Serve main app
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

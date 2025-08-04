@@ -106,9 +106,11 @@ function switchTab(tabName) {
         content.classList.toggle('active', content.id === `${tabName}-tab`);
     });
     
-    // Refresh summary if switching to summary tab
+    // Refresh content based on active tab
     if (tabName === 'summary') {
         refreshSummary();
+    } else if (tabName === 'history') {
+        refreshHistory();
     }
 }
 
@@ -330,6 +332,123 @@ function startPolling() {
     
     // Then poll every 3 seconds
     pollingInterval = setInterval(fetchCurrentSelections, 3000);
+}
+
+async function refreshHistory() {
+    try {
+        const response = await fetch('/api/history');
+        if (response.ok) {
+            const historyData = await response.json();
+            renderHistory(historyData);
+        }
+    } catch (error) {
+        console.error('Error fetching history:', error);
+        document.getElementById('history-list').innerHTML = 
+            '<p class="no-history">Error loading history</p>';
+    }
+}
+
+function renderHistory(historyData) {
+    const historyContainer = document.getElementById('history-list');
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Get all dates except today, sorted newest first
+    const dates = Object.keys(historyData)
+        .filter(date => date !== today)
+        .sort()
+        .reverse();
+    
+    if (dates.length === 0) {
+        historyContainer.innerHTML = 
+            '<p class="no-history">No previous days found.<br>Start making selections to build your dinner history!</p>';
+        return;
+    }
+    
+    let html = '';
+    
+    dates.forEach(date => {
+        const daySelections = historyData[date];
+        const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric', 
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // Count totals for this day
+        const starterCounts = {};
+        const mainCounts = {};
+        
+        Object.values(daySelections).forEach(selection => {
+            if (selection.starter) {
+                starterCounts[selection.starter] = (starterCounts[selection.starter] || 0) + 1;
+            }
+            if (selection.main) {
+                mainCounts[selection.main] = (mainCounts[selection.main] || 0) + 1;
+            }
+        });
+        
+        html += `
+            <div class="history-day">
+                <div class="history-day-header">
+                    📅 ${formattedDate}
+                </div>
+                <div class="history-day-content">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Person</th>
+                                <th>Starter</th>
+                                <th>Main</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        
+        // Show selections for all family members
+        FAMILY_MEMBERS.forEach(person => {
+            const selection = daySelections[person];
+            html += `
+                <tr>
+                    <td style="font-weight: 600;">${person}</td>
+                    <td>${selection?.starter || '- Not Selected -'}</td>
+                    <td>${selection?.main || '- Not Selected -'}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                        </tbody>
+                    </table>
+                    
+                    <div class="history-totals">
+                        <h5>Order Totals for ${formattedDate}:</h5>
+        `;
+        
+        if (Object.keys(starterCounts).length > 0 || Object.keys(mainCounts).length > 0) {
+            html += '<strong>Starters:</strong><ul>';
+            Object.entries(starterCounts).forEach(([item, count]) => {
+                html += `<li>${count}x ${item}</li>`;
+            });
+            html += '</ul>';
+            
+            html += '<strong>Mains:</strong><ul>';
+            Object.entries(mainCounts).forEach(([item, count]) => {
+                html += `<li>${count}x ${item}</li>`;
+            });
+            html += '</ul>';
+        } else {
+            html += '<p style="color: #666; font-style: italic;">No selections made this day</p>';
+        }
+        
+        html += `
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    historyContainer.innerHTML = html;
 }
 
 // Clean up on page unload
