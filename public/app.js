@@ -5,10 +5,7 @@ let isAuthenticated = false;
 let authPassword = '';
 
 // Static Data
-const FAMILY_MEMBERS = [
-    'Simon', 'Alison', 'Tom', 'Jane', 'Riona', 'Matthew', 'Ali', 
-    'Karin', 'Klara', 'Oliver', 'Erica', 'Ulrik', 'Finley', 'Aria'
-];
+let FAMILY_MEMBERS = []; // Will be loaded from server
 
 const STARTERS = [
     'Gazpacho with seasonal vegetables and feta brunoise (VE)',
@@ -62,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAuthStatus();
 });
 
-function initializeApp() {
+async function initializeApp() {
     // Set current date
     const today = new Date().toLocaleDateString('en-US', { 
         weekday: 'long', 
@@ -72,12 +69,32 @@ function initializeApp() {
     });
     currentDate.textContent = today;
     
+    // Load family members from server
+    await loadFamilyMembers();
+    
     // Populate family members dropdown
     populateSelect(personSelect, FAMILY_MEMBERS);
     
     // Populate menu dropdowns
     populateSelect(starterSelect, STARTERS);
     populateSelect(mainSelect, MAINS);
+}
+
+async function loadFamilyMembers() {
+    try {
+        const response = await fetch('/api/family-members', {
+            headers: {
+                'password': authPassword
+            }
+        });
+        if (response.ok) {
+            FAMILY_MEMBERS = await response.json();
+        }
+    } catch (error) {
+        console.error('Error loading family members:', error);
+        // Fallback to default list if server fails
+        FAMILY_MEMBERS = ['Ali', 'Alison', 'Aria', 'Erica', 'Finley', 'Jane', 'Karin', 'Klara', 'Matthew', 'Oliver', 'Riona', 'Simon', 'Tom', 'Ulrik'];
+    }
 }
 
 function populateSelect(selectElement, options) {

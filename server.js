@@ -11,6 +11,10 @@ const PORT = process.env.PORT || 3000;
 // Simple password from environment variable
 const APP_PASSWORD = process.env.DINNER_PASSWORD || 'family2024';
 
+// Family members from environment variable (comma-separated)
+const FAMILY_MEMBERS_STRING = process.env.FAMILY_MEMBERS || 'Simon,Alison,Tom,Jane,Riona,Matthew,Ali,Karin,Klara,Oliver,Erica,Ulrik,Finley,Aria';
+const FAMILY_MEMBERS = FAMILY_MEMBERS_STRING.split(',').map(name => name.trim()).sort();
+
 // Middleware
 app.use(express.json());
 
@@ -39,6 +43,11 @@ function requireAuth(req, res, next) {
 }
 
 // Protected API Routes
+app.get('/api/family-members', requireAuth, (req, res) => {
+  // Get family members list (sorted alphabetically)
+  res.json(FAMILY_MEMBERS);
+});
+
 app.get('/api/selections', requireAuth, (req, res) => {
   // Get current selections for today
   res.json(selectionsManager.getTodaysSelections());
