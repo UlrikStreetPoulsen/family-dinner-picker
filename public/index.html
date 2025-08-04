@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Dinner Picker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <header>
+            <h1>🍽️ Family Dinner Picker</h1>
+            <div class="date" id="current-date"></div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab active" data-tab="select">Select Dinner</button>
+            <button class="tab" data-tab="summary">Summary</button>
+        </nav>
+
+        <!-- Selection Tab -->
+        <div id="select-tab" class="tab-content active">
+            <div class="selection-form">
+                <div class="form-group">
+                    <label for="person-select">Who is making selections?</label>
+                    <select id="person-select">
+                        <option value="">- Select Family Member -</option>
+                        <!-- Family members will be populated by JavaScript -->
+                    </select>
+                </div>
+
+                <div id="menu-selection" class="menu-selection" style="display: none;">
+                    <h3 id="selection-context"></h3>
+                    
+                    <div class="form-group">
+                        <label for="starter-select">Starter</label>
+                        <select id="starter-select">
+                            <option value="">- Select Starter -</option>
+                            <!-- Starters will be populated by JavaScript -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="main-select">Main Course</label>
+                        <select id="main-select">
+                            <option value="">- Select Main -</option>
+                            <!-- Mains will be populated by JavaScript -->
+                        </select>
+                    </div>
+
+                    <button id="save-selection" class="save-btn">Save Selections</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Tab -->
+        <div id="summary-tab" class="tab-content">
+            <div class="summary-content">
+                <h3>Individual Selections</h3>
+                <div id="individual-table"></div>
+                
+                <h3>Order Totals</h3>
+                <div id="totals-summary"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 
