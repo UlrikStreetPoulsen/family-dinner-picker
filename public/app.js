@@ -43,6 +43,7 @@ const starterSelect = document.getElementById('starter-select');
 const mainSelect = document.getElementById('main-select');
 const saveButton = document.getElementById('save-selection');
 const currentDate = document.getElementById('current-date');
+const clearAllBtn = document.getElementById('clear-all-btn');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -89,6 +90,9 @@ function setupEventListeners() {
     
     // Save selection
     saveButton.addEventListener('click', saveSelection);
+    
+    // Clear all selections
+    clearAllBtn.addEventListener('click', clearAllSelections);
 }
 
 function switchTab(tabName) {
@@ -189,6 +193,62 @@ function showSuccessMessage(message) {
     
     const form = document.querySelector('.selection-form');
     form.insertBefore(successDiv, form.firstChild);
+    
+    setTimeout(() => successDiv.remove(), 3000);
+}
+
+async function clearAllSelections() {
+    // Confirmation dialog
+    const confirmed = confirm(
+        `Are you sure you want to clear all dinner selections for ${new Date().toLocaleDateString()}?\n\nThis action cannot be undone.`
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    try {
+        clearAllBtn.disabled = true;
+        clearAllBtn.textContent = '🗑️ Clearing...';
+        
+        const response = await fetch('/api/reset', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            // Clear local data
+            currentSelections = {};
+            
+            // Refresh summary view
+            refreshSummary();
+            
+            // Show success message in summary tab
+            showSummarySuccessMessage('All selections cleared successfully!');
+        } else {
+            throw new Error('Failed to clear selections');
+        }
+    } catch (error) {
+        alert('Error clearing selections. Please try again.');
+        console.error('Clear error:', error);
+    } finally {
+        clearAllBtn.disabled = false;
+        clearAllBtn.textContent = '🗑️ Clear All Selections';
+    }
+}
+
+function showSummarySuccessMessage(message) {
+    const existingMessage = document.querySelector('.summary-success-message');
+    if (existingMessage) existingMessage.remove();
+    
+    const successDiv = document.createElement('div');
+    successDiv.className = 'success-message summary-success-message';
+    successDiv.textContent = message;
+    
+    const summaryContent = document.querySelector('.summary-content');
+    summaryContent.insertBefore(successDiv, summaryContent.firstChild);
     
     setTimeout(() => successDiv.remove(), 3000);
 }

@@ -206,4 +206,34 @@ select:focus {
     border-radius: 8px;
     margin-bottom: 1rem;
     text-align: center;
+}
+
+/* Clear All Section */
+.clear-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e5e5e7;
+    text-align: center;
+}
+
+.clear-btn {
+    padding: 12px 24px;
+    background: #ff3b30;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 44px;
+    transition: background 0.3s ease;
+}
+
+.clear-btn:hover {
+    background: #d70015;
+}
+
+.clear-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
 } 
