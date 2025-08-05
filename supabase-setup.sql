@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS dinner_selections (
   person VARCHAR(50) NOT NULL,
   starter VARCHAR(100),
   main VARCHAR(100),
+  dessert VARCHAR(100),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(environment, date, person)
@@ -33,4 +34,25 @@ SELECT
   is_nullable
 FROM information_schema.columns 
 WHERE table_name = 'dinner_selections'
-ORDER BY ordinal_position; 
+ORDER BY ordinal_position;
+
+-- ==========================================
+-- IF TABLE ALREADY EXISTS, RUN THIS TO ADD DESSERT COLUMN:
+-- ==========================================
+
+-- Add dessert column to existing table
+-- ALTER TABLE dinner_selections ADD COLUMN dessert VARCHAR(100);
+
+-- ==========================================
+-- VERIFY THE COLUMN WAS ADDED:
+-- ==========================================
+
+-- Check table structure after adding dessert column
+-- SELECT 
+--   table_name, 
+--   column_name, 
+--   data_type, 
+--   is_nullable
+-- FROM information_schema.columns 
+-- WHERE table_name = 'dinner_selections'
+-- ORDER BY ordinal_position; 

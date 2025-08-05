@@ -36,7 +36,7 @@ class SelectionsManager {
     }
   }
 
-  async saveSelection(date, person, starter, main) {
+  async saveSelection(date, person, starter, main, dessert) {
     // Wait for initialization if needed
     if (!this.initialized) {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -51,6 +51,7 @@ class SelectionsManager {
           person,
           starter,
           main,
+          dessert,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'environment,date,person'
@@ -92,7 +93,8 @@ class SelectionsManager {
       data.forEach(row => {
         selections[row.person] = {
           starter: row.starter,
-          main: row.main
+          main: row.main,
+          dessert: row.dessert
         };
       });
       
@@ -136,22 +138,27 @@ class SelectionsManager {
     // Count totals
     const starters = {};
     const mains = {};
+    const desserts = {};
     
     Object.values(selections).forEach(selection => {
-      if (selection.starter) {
+      if (selection.starter && selection.starter !== 'no-selection') {
         starters[selection.starter] = (starters[selection.starter] || 0) + 1;
       }
-      if (selection.main) {
+      if (selection.main && selection.main !== 'no-selection') {
         mains[selection.main] = (mains[selection.main] || 0) + 1;
+      }
+      if (selection.dessert && selection.dessert !== 'no-selection') {
+        desserts[selection.dessert] = (desserts[selection.dessert] || 0) + 1;
       }
     });
 
     return {
       individual: selections,
       starters,
-      mains
+      mains,
+      desserts
     };
   }
 }
 
-module.exports = new SelectionsManager(); 
+module.exports = new SelectionsManager();

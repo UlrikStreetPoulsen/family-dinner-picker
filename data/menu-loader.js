@@ -17,10 +17,14 @@ class MenuLoader {
             // Load mains
             const mainsPath = path.join(__dirname, 'menus', 'mains.json');
             this.menus.mains = JSON.parse(fs.readFileSync(mainsPath, 'utf8'));
+            
+            // Load desserts
+            const dessertsPath = path.join(__dirname, 'menus', 'desserts.json');
+            this.menus.desserts = JSON.parse(fs.readFileSync(dessertsPath, 'utf8'));
         } catch (error) {
             console.error('Error loading menus:', error);
             // Fallback to empty menus
-            this.menus = { starters: {}, mains: {} };
+            this.menus = { starters: {}, mains: {}, desserts: {} };
         }
     }
 
@@ -55,7 +59,8 @@ class MenuLoader {
     getAllMenus(language = 'en') {
         return {
             starters: this.getMenu('starters', language),
-            mains: this.getMenu('mains', language)
+            mains: this.getMenu('mains', language),
+            desserts: this.getMenu('desserts', language)
         };
     }
 }

@@ -69,21 +69,22 @@ app.get('/api/selections', requireAuth, async (req, res) => {
 app.post('/api/select', requireAuth, async (req, res) => {
   try {
     // Submit family member's choices
-    const { person, starter, main } = req.body;
+    const { person, starter, main, dessert } = req.body;
     const today = getTodaysDate();
     
-    console.log('Received selection:', { person, starter, main });
+    console.log('Received selection:', { person, starter, main, dessert });
     
     if (!person) {
       return res.status(400).json({ error: 'Missing required field: person' });
     }
     
-    // Handle empty strings as no selection
-    const hasStarter = starter && starter.trim() !== '';
-    const hasMain = main && main.trim() !== '';
+    // Handle empty strings and "no-selection" as no selection
+    const hasStarter = starter && starter.trim() !== '' && starter !== 'no-selection';
+    const hasMain = main && main.trim() !== '' && main !== 'no-selection';
+    const hasDessert = dessert && dessert.trim() !== '' && dessert !== 'no-selection';
     
-    if (!hasStarter && !hasMain) {
-      return res.status(400).json({ error: 'Must select at least a starter or main course' });
+    if (!hasStarter && !hasMain && !hasDessert) {
+      return res.status(400).json({ error: 'Must select at least a starter, main, or dessert' });
     }
     
     // Pass cleaned values (empty string becomes null)
@@ -91,7 +92,8 @@ app.post('/api/select', requireAuth, async (req, res) => {
       today,
       person, 
       hasStarter ? starter : null, 
-      hasMain ? main : null
+      hasMain ? main : null,
+      hasDessert ? dessert : null
     );
     res.json({ success: true });
   } catch (error) {

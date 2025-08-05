@@ -24,11 +24,11 @@
     "fr": "Epaule de veau braisée basse température aux champignons des bois"
   },
   "7": {
-    "en": "Ardoisières Trout Fillet and its Virgin",
+    "en": "Ardoisières Trout Fillet with virgin sauce",
     "fr": "Filet de Truite des Ardoisières et sa vierge"
   },
   "8": {
-    "en": "Sea bass fillet with tapenade and sundried tomatoes, basil",
+    "en": "Sea bass fillet with tapenade and sun-dried tomatoes, basil",
     "fr": "Filet de Bar tapenade et tomates séchées, basilic"
   },
   "9": {
@@ -50,5 +50,13 @@
   "13": {
     "en": "Linguine carbonara",
     "fr": "Linguine façon carbonara"
+  },
+  "14": {
+    "en": "Savoyard fondue with charcuterie and green salad",
+    "fr": "Fondue savoyarde, charcuterie salade verte"
+  },
+  "15": {
+    "en": "Raclette with charcuterie and green salad",
+    "fr": "Raclette, charcuterie, salade verte"
   }
 } 

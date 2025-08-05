@@ -26,6 +26,7 @@ const menuSelection = document.getElementById('menu-selection');
 const selectionContext = document.getElementById('selection-context');
 const starterSelect = document.getElementById('starter-select');
 const mainSelect = document.getElementById('main-select');
+const dessertSelect = document.getElementById('dessert-select');
 const saveButton = document.getElementById('save-selection');
 const currentDate = document.getElementById('current-date');
 const clearAllBtn = document.getElementById('clear-all-btn');
@@ -88,7 +89,7 @@ async function loadMenuData() {
     } catch (error) {
         console.error('Error loading menu data:', error);
         // Fallback to empty menu
-        MENU_DATA = { starters: {}, mains: {} };
+        MENU_DATA = { starters: {}, mains: {}, desserts: {} };
     }
 }
 
@@ -96,6 +97,7 @@ function populateMenuDropdowns() {
     // Clear existing options and start with "No selection" as default
     starterSelect.innerHTML = '';
     mainSelect.innerHTML = '';
+    dessertSelect.innerHTML = '';
     
     // Add "No selection" option to starters
     const noStarterOption = document.createElement('option');
@@ -108,6 +110,12 @@ function populateMenuDropdowns() {
     noMainOption.value = "no-selection";
     noMainOption.textContent = "- No selection -";
     mainSelect.appendChild(noMainOption);
+    
+    // Add "No selection" option to desserts
+    const noDessertOption = document.createElement('option');
+    noDessertOption.value = "no-selection";
+    noDessertOption.textContent = "- No selection -";
+    dessertSelect.appendChild(noDessertOption);
     
     // Populate starters
     if (MENU_DATA.starters) {
@@ -126,6 +134,16 @@ function populateMenuDropdowns() {
             option.value = id;
             option.textContent = MENU_DATA.mains[id];
             mainSelect.appendChild(option);
+        });
+    }
+    
+    // Populate desserts
+    if (MENU_DATA.desserts) {
+        Object.keys(MENU_DATA.desserts).forEach(id => {
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = MENU_DATA.desserts[id];
+            dessertSelect.appendChild(option);
         });
     }
 }
@@ -329,9 +347,12 @@ function onPersonSelected() {
             starterSelect.value = existingSelection.starter || 'no-selection';
             // Set main - use "no-selection" if no main, otherwise use the actual value
             mainSelect.value = existingSelection.main || 'no-selection';
+            // Set dessert - use "no-selection" if no dessert, otherwise use the actual value
+            dessertSelect.value = existingSelection.dessert || 'no-selection';
         } else {
             starterSelect.value = 'no-selection';
             mainSelect.value = 'no-selection';
+            dessertSelect.value = 'no-selection';
         }
     } else {
         menuSelection.style.display = 'none';
@@ -342,6 +363,7 @@ async function saveSelection() {
     const person = personSelect.value;
     const starter = starterSelect.value;
     const main = mainSelect.value;
+    const dessert = dessertSelect.value;
     
     if (!person) {
         alert('Please select a family member');
@@ -351,9 +373,10 @@ async function saveSelection() {
     // Handle empty strings and "no-selection" as no selection
     const hasStarter = starter && starter.trim() !== '' && starter !== 'no-selection';
     const hasMain = main && main.trim() !== '' && main !== 'no-selection';
+    const hasDessert = dessert && dessert.trim() !== '' && dessert !== 'no-selection';
     
-    if (!hasStarter && !hasMain) {
-        alert('Please select at least a starter OR a main course');
+    if (!hasStarter && !hasMain && !hasDessert) {
+        alert('Please select at least a starter, main, or dessert');
         return;
     }
     
@@ -367,7 +390,7 @@ async function saveSelection() {
                 'Content-Type': 'application/json',
                 'password': authPassword
             },
-            body: JSON.stringify({ person, starter, main })
+            body: JSON.stringify({ person, starter, main, dessert })
         });
         
         if (response.ok) {
@@ -375,6 +398,7 @@ async function saveSelection() {
             const parts = [];
             if (hasStarter) parts.push('starter');
             if (hasMain) parts.push('main');
+            if (hasDessert) parts.push('dessert');
             showSuccessMessage(`Saved ${parts.join(' and ')} for ${person}!`);
             
             // Reset form
@@ -494,7 +518,7 @@ function refreshIndividualTable() {
     const tableContainer = document.getElementById('individual-table');
     
     let html = '<table style="width: 100%; border-collapse: collapse;">';
-    html += '<thead><tr style="background: #f8f9fa;"><th style="padding: 0.5rem; border: 1px solid #ddd;">Person</th><th style="padding: 0.5rem; border: 1px solid #ddd;">Starter</th><th style="padding: 0.5rem; border: 1px solid #ddd;">Main</th></tr></thead>';
+    html += '<thead><tr style="background: #f8f9fa;"><th style="padding: 0.5rem; border: 1px solid #ddd;">Person</th><th style="padding: 0.5rem; border: 1px solid #ddd;">Starter</th><th style="padding: 0.5rem; border: 1px solid #ddd;">Main</th><th style="padding: 0.5rem; border: 1px solid #ddd;">Dessert</th></tr></thead>';
     html += '<tbody>';
     
     FAMILY_MEMBERS.forEach(person => {
@@ -503,6 +527,7 @@ function refreshIndividualTable() {
         html += `<td style="padding: 0.5rem; border: 1px solid #ddd; font-weight: 600;">${person}</td>`;
         html += `<td style="padding: 0.5rem; border: 1px solid #ddd; font-size: 0.9rem;">${getMenuName('starters', selection?.starter) || '- Not Selected -'}</td>`;
         html += `<td style="padding: 0.5rem; border: 1px solid #ddd; font-size: 0.9rem;">${getMenuName('mains', selection?.main) || '- Not Selected -'}</td>`;
+        html += `<td style="padding: 0.5rem; border: 1px solid #ddd; font-size: 0.9rem;">${getMenuName('desserts', selection?.dessert) || '- Not Selected -'}</td>`;
         html += '</tr>';
     });
     
@@ -521,6 +546,7 @@ function refreshTotalsSummary() {
     // Count quantities
     const starterCounts = {};
     const mainCounts = {};
+    const dessertCounts = {};
     
     Object.values(currentSelections).forEach(selection => {
         if (selection.starter && selection.starter !== 'no-selection') {
@@ -528,6 +554,9 @@ function refreshTotalsSummary() {
         }
         if (selection.main && selection.main !== 'no-selection') {
             mainCounts[selection.main] = (mainCounts[selection.main] || 0) + 1;
+        }
+        if (selection.dessert && selection.dessert !== 'no-selection') {
+            dessertCounts[selection.dessert] = (dessertCounts[selection.dessert] || 0) + 1;
         }
     });
     
@@ -549,7 +578,16 @@ function refreshTotalsSummary() {
     });
     html += '</ul>';
     
-    if (Object.keys(starterCounts).length === 0 && Object.keys(mainCounts).length === 0) {
+    html += '<h4 style="margin-top: 1rem;">DESSERTS:</h4><ul>';
+    Object.entries(dessertCounts).forEach(([id, count]) => {
+        const name = getMenuName('desserts', id);
+        if (name) {
+            html += `<li>${count}x ${name}</li>`;
+        }
+    });
+    html += '</ul>';
+    
+    if (Object.keys(starterCounts).length === 0 && Object.keys(mainCounts).length === 0 && Object.keys(dessertCounts).length === 0) {
         html = '<p style="text-align: center; color: #666;">No selections made yet</p>';
     }
     
