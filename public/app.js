@@ -6,31 +6,8 @@ let authPassword = '';
 
 // Static Data
 let FAMILY_MEMBERS = []; // Will be loaded from server
-
-const STARTERS = [
-    'Gazpacho with seasonal vegetables and feta brunoise (VE)',
-    'Thai prawn and haddock tartare with exotic flavor',
-    'Carpaccio of pineapple tomatoes and beetroot, spicy burrata (VE)',
-    'Fish ceviche marinated with lime',
-    'Melon fan, Savoy ham chiffonade',
-    'Tex-Mex salad, hot spicy goat cheese'
-];
-
-const MAINS = [
-    'Poke Bowl (VE/VG)',
-    'Shrimp Poke Bowl',
-    'Caramelized pork tenderloin medallion with soy and sesame seeds, lime powder',
-    'Crispy chicken supreme with smoked paprika, mashed sweet potato, young shoots',
-    'Caramelized pork ribs with spices',
-    'Low-temperature braised veal shoulder with wild mushrooms',
-    'Ardoisières Trout Fillet and its Virgin',
-    'Sea bass fillet with tapenade and sundried tomatoes, basil',
-    'Linguine with saffron and crab coulis (VE)',
-    'Malfalde with Bolognese and Pecorino',
-    'Vegetable tian with tomato lentils, old-fashioned flavors (vegan/veggie)',
-    'Homemade nuggets and homemade fries',
-    'Linguine carbonara'
-];
+let MENU_DATA = {}; // Will be loaded from server
+let CURRENT_LANGUAGE = 'en'; // Default language
 
 // Global state
 let currentSelections = {};
@@ -52,6 +29,7 @@ const mainSelect = document.getElementById('main-select');
 const saveButton = document.getElementById('save-selection');
 const currentDate = document.getElementById('current-date');
 const clearAllBtn = document.getElementById('clear-all-btn');
+const languageBtn = document.getElementById('language-btn');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -69,15 +47,15 @@ async function initializeApp() {
     });
     currentDate.textContent = today;
     
-    // Load family members from server
+    // Load family members and menu data from server
     await loadFamilyMembers();
+    await loadMenuData();
     
     // Populate family members dropdown
     populateSelect(personSelect, FAMILY_MEMBERS);
     
     // Populate menu dropdowns
-    populateSelect(starterSelect, STARTERS);
-    populateSelect(mainSelect, MAINS);
+    populateMenuDropdowns();
 }
 
 async function loadFamilyMembers() {
@@ -94,6 +72,49 @@ async function loadFamilyMembers() {
         console.error('Error loading family members:', error);
         // Fallback to default list if server fails
         FAMILY_MEMBERS = ['Ali', 'Alison', 'Aria', 'Erica', 'Finley', 'Jane', 'Karin', 'Klara', 'Matthew', 'Oliver', 'Riona', 'Simon', 'Tom', 'Ulrik'];
+    }
+}
+
+async function loadMenuData() {
+    try {
+        const response = await fetch(`/api/menu/${CURRENT_LANGUAGE}`, {
+            headers: {
+                'password': authPassword
+            }
+        });
+        if (response.ok) {
+            MENU_DATA = await response.json();
+        }
+    } catch (error) {
+        console.error('Error loading menu data:', error);
+        // Fallback to empty menu
+        MENU_DATA = { starters: {}, mains: {} };
+    }
+}
+
+function populateMenuDropdowns() {
+    // Clear existing options
+    starterSelect.innerHTML = '<option value="">- Select Starter -</option>';
+    mainSelect.innerHTML = '<option value="">- Select Main -</option>';
+    
+    // Populate starters
+    if (MENU_DATA.starters) {
+        Object.keys(MENU_DATA.starters).forEach(id => {
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = MENU_DATA.starters[id];
+            starterSelect.appendChild(option);
+        });
+    }
+    
+    // Populate mains
+    if (MENU_DATA.mains) {
+        Object.keys(MENU_DATA.mains).forEach(id => {
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = MENU_DATA.mains[id];
+            mainSelect.appendChild(option);
+        });
     }
 }
 
@@ -117,6 +138,9 @@ function setupAuthEventListeners() {
     
     // Logout
     logoutBtn.addEventListener('click', handleLogout);
+    
+    // Language toggle
+    languageBtn.addEventListener('click', toggleLanguage);
 }
 
 function checkAuthStatus() {
@@ -198,6 +222,25 @@ function handleLogout() {
     sessionStorage.removeItem('dinnerPickerAuth');
     showLoginScreen();
     passwordInput.value = '';
+}
+
+async function toggleLanguage() {
+    // Toggle between English and French
+    CURRENT_LANGUAGE = CURRENT_LANGUAGE === 'en' ? 'fr' : 'en';
+    
+    // Update button text to show just flags
+    languageBtn.textContent = CURRENT_LANGUAGE === 'en' ? '🇫🇷' : '🇬🇧';
+    
+    // Reload menu data in new language
+    await loadMenuData();
+    
+    // Repopulate dropdowns
+    populateMenuDropdowns();
+    
+    // Refresh summary to show names in new language
+    if (document.getElementById('summary-tab').classList.contains('active')) {
+        refreshSummary();
+    }
 }
 
 function setupEventListeners() {
@@ -415,13 +458,18 @@ function refreshIndividualTable() {
         const selection = currentSelections[person];
         html += '<tr>';
         html += `<td style="padding: 0.5rem; border: 1px solid #ddd; font-weight: 600;">${person}</td>`;
-        html += `<td style="padding: 0.5rem; border: 1px solid #ddd; font-size: 0.9rem;">${selection?.starter || '- Not Selected -'}</td>`;
-        html += `<td style="padding: 0.5rem; border: 1px solid #ddd; font-size: 0.9rem;">${selection?.main || '- Not Selected -'}</td>`;
+        html += `<td style="padding: 0.5rem; border: 1px solid #ddd; font-size: 0.9rem;">${getMenuName('starters', selection?.starter) || '- Not Selected -'}</td>`;
+        html += `<td style="padding: 0.5rem; border: 1px solid #ddd; font-size: 0.9rem;">${getMenuName('mains', selection?.main) || '- Not Selected -'}</td>`;
         html += '</tr>';
     });
     
     html += '</tbody></table>';
     tableContainer.innerHTML = html;
+}
+
+function getMenuName(category, id) {
+    if (!id || !MENU_DATA[category]) return null;
+    return MENU_DATA[category][id] || null;
 }
 
 function refreshTotalsSummary() {
@@ -441,14 +489,16 @@ function refreshTotalsSummary() {
     });
     
     let html = '<h4>STARTERS:</h4><ul>';
-    Object.entries(starterCounts).forEach(([item, count]) => {
-        html += `<li>${count}x ${item}</li>`;
+    Object.entries(starterCounts).forEach(([id, count]) => {
+        const name = getMenuName('starters', id);
+        html += `<li>${count}x ${name}</li>`;
     });
     html += '</ul>';
     
     html += '<h4 style="margin-top: 1rem;">MAINS:</h4><ul>';
-    Object.entries(mainCounts).forEach(([item, count]) => {
-        html += `<li>${count}x ${item}</li>`;
+    Object.entries(mainCounts).forEach(([id, count]) => {
+        const name = getMenuName('mains', id);
+        html += `<li>${count}x ${name}</li>`;
     });
     html += '</ul>';
     

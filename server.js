@@ -4,6 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const selectionsManager = require('./data/selections');
+const menuLoader = require('./data/menu-loader');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -91,7 +92,16 @@ app.post('/api/reset', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
+// Menu API endpoints
+app.get('/api/menu/:language', requireAuth, (req, res) => {
+  const language = req.params.language || 'en';
+  res.json(menuLoader.getAllMenus(language));
+});
 
+app.get('/api/menu/:category/:language', requireAuth, (req, res) => {
+  const { category, language } = req.params;
+  res.json(menuLoader.getMenuList(category, language));
+});
 
 // Serve main app
 app.get('/', (req, res) => {
