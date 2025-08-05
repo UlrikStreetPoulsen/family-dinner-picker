@@ -225,6 +225,11 @@ function handleLogout() {
 }
 
 async function toggleLanguage() {
+    // Store current selections before language change
+    const currentPerson = personSelect.value;
+    const currentStarter = starterSelect.value;
+    const currentMain = mainSelect.value;
+    
     // Toggle between English and French
     CURRENT_LANGUAGE = CURRENT_LANGUAGE === 'en' ? 'fr' : 'en';
     
@@ -236,6 +241,21 @@ async function toggleLanguage() {
     
     // Repopulate dropdowns
     populateMenuDropdowns();
+    
+    // Restore selections if they existed
+    if (currentPerson) {
+        personSelect.value = currentPerson;
+        // Trigger the person selection to show menu and restore starter/main
+        onPersonSelected();
+        
+        // Restore starter and main selections if they existed
+        if (currentStarter) {
+            starterSelect.value = currentStarter;
+        }
+        if (currentMain) {
+            mainSelect.value = currentMain;
+        }
+    }
     
     // Refresh summary to show names in new language
     if (document.getElementById('summary-tab').classList.contains('active')) {
