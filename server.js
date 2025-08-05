@@ -16,6 +16,11 @@ const APP_PASSWORD = process.env.DINNER_PASSWORD || 'family2024';
 const FAMILY_MEMBERS_STRING = process.env.FAMILY_MEMBERS || 'Simon,Alison,Tom,Jane,Riona,Matthew,Ali,Karin,Klara,Oliver,Erica,Ulrik,Finley,Aria';
 const FAMILY_MEMBERS = FAMILY_MEMBERS_STRING.split(',').map(name => name.trim()).sort();
 
+// Helper function to get today's date in YYYY-MM-DD format
+function getTodaysDate() {
+  return new Date().toISOString().split('T')[0];
+}
+
 // Middleware
 app.use(express.json());
 
@@ -49,47 +54,74 @@ app.get('/api/family-members', requireAuth, (req, res) => {
   res.json(FAMILY_MEMBERS);
 });
 
-app.get('/api/selections', requireAuth, (req, res) => {
-  // Get current selections for today
-  res.json(selectionsManager.getTodaysSelections());
-});
-
-app.post('/api/select', requireAuth, (req, res) => {
-  // Submit family member's choices
-  const { person, starter, main } = req.body;
-  
-  console.log('Received selection:', { person, starter, main });
-  
-  if (!person) {
-    return res.status(400).json({ error: 'Missing required field: person' });
+app.get('/api/selections', requireAuth, async (req, res) => {
+  try {
+    // Get current selections for today
+    const today = getTodaysDate();
+    const selections = await selectionsManager.getSelectionsForDate(today);
+    res.json(selections);
+  } catch (error) {
+    console.error('Error getting selections:', error);
+    res.status(500).json({ error: 'Failed to get selections' });
   }
-  
-  // Handle empty strings as no selection
-  const hasStarter = starter && starter.trim() !== '';
-  const hasMain = main && main.trim() !== '';
-  
-  if (!hasStarter && !hasMain) {
-    return res.status(400).json({ error: 'Must select at least a starter or main course' });
+});
+
+app.post('/api/select', requireAuth, async (req, res) => {
+  try {
+    // Submit family member's choices
+    const { person, starter, main } = req.body;
+    const today = getTodaysDate();
+    
+    console.log('Received selection:', { person, starter, main });
+    
+    if (!person) {
+      return res.status(400).json({ error: 'Missing required field: person' });
+    }
+    
+    // Handle empty strings as no selection
+    const hasStarter = starter && starter.trim() !== '';
+    const hasMain = main && main.trim() !== '';
+    
+    if (!hasStarter && !hasMain) {
+      return res.status(400).json({ error: 'Must select at least a starter or main course' });
+    }
+    
+    // Pass cleaned values (empty string becomes null)
+    await selectionsManager.saveSelection(
+      today,
+      person, 
+      hasStarter ? starter : null, 
+      hasMain ? main : null
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving selection:', error);
+    res.status(500).json({ error: 'Failed to save selection' });
   }
-  
-  // Pass cleaned values (empty string becomes null)
-  selectionsManager.saveSelection(
-    person, 
-    hasStarter ? starter : null, 
-    hasMain ? main : null
-  );
-  res.json({ success: true });
 });
 
-app.get('/api/summary', requireAuth, (req, res) => {
-  // Get order quantities summary
-  res.json(selectionsManager.getSelectionSummary());
+app.get('/api/summary', requireAuth, async (req, res) => {
+  try {
+    // Get order quantities summary
+    const today = getTodaysDate();
+    const summary = await selectionsManager.getSelectionSummary(today);
+    res.json(summary);
+  } catch (error) {
+    console.error('Error getting summary:', error);
+    res.status(500).json({ error: 'Failed to get summary' });
+  }
 });
 
-app.post('/api/reset', requireAuth, (req, res) => {
-  // Reset today's selections
-  selectionsManager.resetTodaysSelections();
-  res.json({ success: true });
+app.post('/api/reset', requireAuth, async (req, res) => {
+  try {
+    // Reset today's selections
+    const today = getTodaysDate();
+    await selectionsManager.clearSelectionsForDate(today);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error resetting selections:', error);
+    res.status(500).json({ error: 'Failed to reset selections' });
+  }
 });
 
 // Menu API endpoints
@@ -110,4 +142,5 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Dinner Picker app running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 }); 

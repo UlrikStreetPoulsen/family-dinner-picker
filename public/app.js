@@ -277,6 +277,9 @@ function setupEventListeners() {
     
     // Clear all selections
     clearAllBtn.addEventListener('click', clearAllSelections);
+    
+    // Refresh button
+    document.getElementById('refresh-btn').addEventListener('click', manualRefresh);
 }
 
 function switchTab(tabName) {
@@ -292,7 +295,10 @@ function switchTab(tabName) {
     
     // Refresh content based on active tab
     if (tabName === 'summary') {
-        refreshSummary();
+        // Auto-refresh when summary tab is loaded
+        fetchCurrentSelections().then(() => {
+            refreshSummary();
+        });
     }
 }
 
@@ -416,6 +422,9 @@ async function clearAllSelections() {
             // Clear local data
             currentSelections = {};
             
+            // Refresh data from server
+            await fetchCurrentSelections();
+            
             // Refresh summary view
             refreshSummary();
             
@@ -530,18 +539,23 @@ function refreshTotalsSummary() {
 }
 
 function startPolling() {
-    // Fetch immediately
+    // Fetch immediately on app start
     fetchCurrentSelections();
     
-    // Then poll every 3 seconds
-    pollingInterval = setInterval(fetchCurrentSelections, 3000);
+    // No more polling - we'll refresh only when needed
+    console.log('📊 Auto-refresh enabled: Summary tab and after selections');
 }
 
-
+// Add manual refresh function
+async function manualRefresh() {
+    await fetchCurrentSelections();
+    if (document.getElementById('summary-tab').classList.contains('active')) {
+        refreshSummary();
+    }
+    showSummarySuccessMessage('Refreshed!');
+}
 
 // Clean up on page unload
 window.addEventListener('beforeunload', () => {
-    if (pollingInterval) {
-        clearInterval(pollingInterval);
-    }
+    // No polling to clean up anymore
 }); 
