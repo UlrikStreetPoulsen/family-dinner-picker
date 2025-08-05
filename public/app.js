@@ -93,9 +93,21 @@ async function loadMenuData() {
 }
 
 function populateMenuDropdowns() {
-    // Clear existing options
-    starterSelect.innerHTML = '<option value="">- Select Starter -</option>';
-    mainSelect.innerHTML = '<option value="">- Select Main -</option>';
+    // Clear existing options and start with "No selection" as default
+    starterSelect.innerHTML = '';
+    mainSelect.innerHTML = '';
+    
+    // Add "No selection" option to starters
+    const noStarterOption = document.createElement('option');
+    noStarterOption.value = "no-selection";
+    noStarterOption.textContent = "- No selection -";
+    starterSelect.appendChild(noStarterOption);
+    
+    // Add "No selection" option to mains
+    const noMainOption = document.createElement('option');
+    noMainOption.value = "no-selection";
+    noMainOption.textContent = "- No selection -";
+    mainSelect.appendChild(noMainOption);
     
     // Populate starters
     if (MENU_DATA.starters) {
@@ -313,11 +325,13 @@ function onPersonSelected() {
         // Pre-populate if person has existing selections
         const existingSelection = currentSelections[selectedPerson];
         if (existingSelection) {
-            starterSelect.value = existingSelection.starter || '';
-            mainSelect.value = existingSelection.main || '';
+            // Set starter - use "no-selection" if no starter, otherwise use the actual value
+            starterSelect.value = existingSelection.starter || 'no-selection';
+            // Set main - use "no-selection" if no main, otherwise use the actual value
+            mainSelect.value = existingSelection.main || 'no-selection';
         } else {
-            starterSelect.value = '';
-            mainSelect.value = '';
+            starterSelect.value = 'no-selection';
+            mainSelect.value = 'no-selection';
         }
     } else {
         menuSelection.style.display = 'none';
@@ -334,9 +348,9 @@ async function saveSelection() {
         return;
     }
     
-    // Handle empty strings as no selection
-    const hasStarter = starter && starter.trim() !== '';
-    const hasMain = main && main.trim() !== '';
+    // Handle empty strings and "no-selection" as no selection
+    const hasStarter = starter && starter.trim() !== '' && starter !== 'no-selection';
+    const hasMain = main && main.trim() !== '' && main !== 'no-selection';
     
     if (!hasStarter && !hasMain) {
         alert('Please select at least a starter OR a main course');
@@ -509,10 +523,10 @@ function refreshTotalsSummary() {
     const mainCounts = {};
     
     Object.values(currentSelections).forEach(selection => {
-        if (selection.starter) {
+        if (selection.starter && selection.starter !== 'no-selection') {
             starterCounts[selection.starter] = (starterCounts[selection.starter] || 0) + 1;
         }
-        if (selection.main) {
+        if (selection.main && selection.main !== 'no-selection') {
             mainCounts[selection.main] = (mainCounts[selection.main] || 0) + 1;
         }
     });
@@ -520,14 +534,18 @@ function refreshTotalsSummary() {
     let html = '<h4>STARTERS:</h4><ul>';
     Object.entries(starterCounts).forEach(([id, count]) => {
         const name = getMenuName('starters', id);
-        html += `<li>${count}x ${name}</li>`;
+        if (name) {
+            html += `<li>${count}x ${name}</li>`;
+        }
     });
     html += '</ul>';
     
     html += '<h4 style="margin-top: 1rem;">MAINS:</h4><ul>';
     Object.entries(mainCounts).forEach(([id, count]) => {
         const name = getMenuName('mains', id);
-        html += `<li>${count}x ${name}</li>`;
+        if (name) {
+            html += `<li>${count}x ${name}</li>`;
+        }
     });
     html += '</ul>';
     
